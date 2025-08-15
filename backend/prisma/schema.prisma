@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  retailer
+  admin
+}
+
+enum OrderStatus {
+  pending
+  shipped
+  delivered
+  cancelled
+}
+
+model User {
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  password        String
+  role            Role              @default(user)
+  mobile          String?
+  profilePhoto    String?
+  greenPoints     Int               @default(0)
+  cashbackEarned  Int               @default(0) // Total cashback mila
+  createdAt       DateTime          @default(now())
+  returns         Return[]
+  orders          Order[]
+  likes           Like[]
+  cartItems       Cart[]
+  ReturnPackaging ReturnPackaging[]
+  redeemedItems   RedeemHistory[]
+  // Redeemed items ka record
+
+  notifications Notification[]
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  category      String
+  material      String
+  size          String
+  imageUrl      String
+  recyclable    Boolean
+  price         Int      @default(0)
+  pointsPerUnit Int      @default(1)
+  createdAt     DateTime @default(now())
+  returns       Return[]
+  orders        Order[]
+  likedBy       Like[]
+  cartedBy      Cart[]
+
+  @@index([category])
+  @@index([material])
+}
+
+model Return {
+  id         String   @id @default(uuid())
+  userId     String
+  productId  String
+  quantity   Int
+  points     Int
+  returnedAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  productId String
+  quantity  Int         @default(1)
+  orderedAt DateTime    @default(now())
+  status    OrderStatus @default(pending)
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  returnPackaging ReturnPackaging?
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  likedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model ReturnPackaging {
+  id       String  @id @default(uuid())
+  orderId  String  @unique
+  userId   String
+  material String?
+
+  size      String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model RedeemHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  item       String
+  pointsUsed Int
+  type       String? 
+  // e.g., cashback, product, etc.
+   cashbackAmount Int  @default(0)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  message   String
+  link      String? 
+  type      String // "Return" | "Reward" | "Offer"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model BlacklistedToken {
+  id        Int      @id @default(autoincrement())
+  token     String
+  createdAt DateTime @default(now())
+}
