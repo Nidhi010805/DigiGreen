@@ -4,13 +4,14 @@ import RetailerNavbar from './components/Navbar/RetailerNavbar';
 import PublicNavbar from './components/Navbar/PublicNavbar';
 import Footer from './components/Footer';
 import Leaderboard from "./components/Leaderboard";
+import ReturnForm from "./components/ReturnForm";
 import NotificationProvider from "./context/NotificationContext";
 
 // Pages
 import Home from './pages/Home';
 import UserDashboard from './pages/UserDashboard';
 import RetailerDashboard from './pages/RetailerDashboard';
-
+import RetailersPage from "./pages/RetailersPage";
 import SmartSuggest from './pages/SmartSuggest';
 import Login from './pages/Login';
 import ProductList from "./pages/ProductList";
@@ -72,6 +73,9 @@ const isAuthenticated = token && token !== "undefined" && token !== "";
             <Route path="/initiate-return" element={<InitiateReturn />} />
             <Route path="/my-rewards" element={<Rewards />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/retailers" element={<RetailersPage />} />
+             <Route path="/return-package" element={<ReturnForm />} />
+
 
             {/* Retailer Routes */}
             <Route path="/retailer/dashboard" element={<RetailerDashboard />} />

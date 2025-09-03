@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { useState, useEffect, useCallback } from "react";
+
 
 export default function UserSettings() {
   const [user, setUser] = useState(null);
@@ -9,21 +11,26 @@ export default function UserSettings() {
   const [email, setEmail] = useState("");
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
   const [photo, setPhoto] = useState(null);
+  const [address, setAddress] = useState("");
 
   const navigate = useNavigate();
   const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 
-  const fetchProfile = () => {
-    API.get("/api/user/profile")
-      .then((res) => {
-        setUser(res.data);
-        setName(res.data.name);
-        setMobile(res.data.mobile || "");
-        setEmail(res.data.email);
-      })
-      .catch(() => navigate("/login"));
-  };
+
+
+const fetchProfile = useCallback(() => {
+  API.get("/api/user/profile")
+    .then((res) => {
+      setUser(res.data);
+      setName(res.data.name);
+      setMobile(res.data.mobile || "");
+      setEmail(res.data.email);
+      setAddress(res.data.address || ""); 
+    })
+    .catch(() => navigate("/login"));
+}, [navigate]);  
+
 
   useEffect(() => {
     fetchProfile();
@@ -32,11 +39,14 @@ export default function UserSettings() {
   const handleProfileUpdate = () => {
     if (!name || !email) return alert("Name and Email are required");
 
-    API.put("/api/user/update", { name, mobile, email })
-      .then((res) => {
-        alert("Profile updated successfully!");
-        setUser(res.data.user);
-      })
+    API.put("/api/user/update", { name, mobile, email, address })
+  .then((res) => {
+    alert("Profile updated successfully!");
+    setUser(res.data.user);
+    setMobile(res.data.user.mobile || "");
+    setAddress(res.data.user.address || "");
+  })
+
       .catch(() => alert("Failed to update profile"));
   };
 
@@ -131,6 +141,15 @@ export default function UserSettings() {
           onChange={(e) => setMobile(e.target.value)}
         />
       </div>
+      <div className="mb-4">
+  <label className="block mb-1">Address</label>
+  <input
+    className="w-full border px-4 py-2 rounded"
+    value={address}
+    onChange={(e) => setAddress(e.target.value)}
+  />
+</div>
+
 
       <button
         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-6"

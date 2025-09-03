@@ -5,7 +5,35 @@ import API from "../services/api";
 
 export default function UserDashboard() {
   const [user, setUser] = useState(null);
+  const [nearestRetailer, setNearestRetailer] = useState(null);
+const [nearestDistance, setNearestDistance] = useState(null);
   const navigate = useNavigate();
+  useEffect(() => {
+  const fetchNearestRetailer = async () => {
+    try {
+      // 👇 user location get karo (browser se)
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          const res = await API.post("/api/retailers/nearest", {
+            lat: latitude,
+            lng: longitude,
+          });
+
+          setNearestRetailer(res.data.nearest);
+          setNearestDistance(res.data.distance.toFixed(2));
+        });
+      } else {
+        console.warn("Geolocation not supported by this browser.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch nearest retailer", err);
+    }
+  };
+
+  fetchNearestRetailer();
+}, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,12 +78,21 @@ const profileImg = user?.profilePhoto
 
       {/* Account Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="backdrop-blur-lg bg-white/80 border border-gray-200 rounded-xl p-6 shadow-xl">
-          <h2 className="text-lg font-semibold mb-4 text-green-700">Account Information</h2>
-          <p><span className="font-medium">Email:</span> {user.email}</p>
-          <p><span className="font-medium">Mobile:</span> {user.mobile || "Not Provided"}</p>
-          <p><span className="font-medium">Green Points:</span> {user.greenPoints}</p>
-        </div>
+       <div className="backdrop-blur-lg bg-white/80 border border-gray-200 rounded-xl p-6 shadow-xl">
+  <h2 className="text-lg font-semibold mb-4 text-green-700">Account Information</h2>
+  <p>
+    <span className="font-medium">Email:</span> {user.email}
+  </p>
+  <p>
+    <span className="font-medium">Mobile:</span> {user.mobile || "Not Provided"}
+  </p>
+  <p>
+    <span className="font-medium">Address:</span> {user.address || "Not Provided"}
+  </p>
+  <p>
+    <span className="font-medium">Green Points:</span> {user.greenPoints}
+  </p>
+</div>
 
         <div className="backdrop-blur-lg bg-white/80 border border-gray-200 rounded-xl p-6 shadow-xl flex flex-col items-center justify-center">
           <h2 className="text-lg font-semibold mb-2 text-green-700">Membership Level</h2>
@@ -76,33 +113,39 @@ const profileImg = user?.profilePhoto
         <Card title="Returns" desc={`${user.totalReturns || 0} returns processed`} onClick={() => navigate("/my-returns")} />
         <Card title="Rewards" desc={`${user.greenPoints} points, ₹${user.cashbackEarned} cashback`} onClick={() => navigate("/my-rewards")} />
         <Card title="Settings" desc="Manage account info" onClick={() => navigate("/user/settings")} />
-      </div>
+          <Card 
+  title="Initiate Return" 
+  desc="Return a used package" 
+  onClick={() => navigate("/return-package")} 
+/>
 
-      {/* Referral Section */}
-      <div className="backdrop-blur-lg bg-white/80 border border-green-200 rounded-xl p-6 shadow-xl">
-        <h2 className="text-lg font-semibold mb-2 text-green-700">Refer & Earn</h2>
-        <p className="text-gray-600 mb-4">Invite your friends and earn 50 Green Points for each signup!</p>
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
-          <input
-            type="text"
-            value={`https://repack.com/invite/${user.id}`}
-            readOnly
-            className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-md sm:rounded-l-md"
-          />
-          <button
-            className="w-full sm:w-auto px-4 bg-green-600 text-white py-2 rounded-md sm:rounded-r-md hover:bg-green-700"
-            onClick={() => {
-              navigator.clipboard.writeText(`https://repack.com/invite/${user.id}`);
-              alert("Referral link copied!");
-            }}
-          >
-            Copy Link
-          </button>
-        </div>
       </div>
+{/* 📍 Nearest Retailer */}
+    {nearestRetailer && (
+      <div className="mt-6 bg-white/80 border border-gray-200 shadow-xl rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-green-700 mb-2">📍 Nearest Retailer</h2>
+        <p><strong>Name:</strong> {nearestRetailer.name}</p>
+        <p><strong>Email:</strong> {nearestRetailer.email}</p>
+        <p><strong>Mobile:</strong> {nearestRetailer.mobile || "Not Provided"}</p>
+        <p><strong>Address:</strong> {nearestRetailer.address || "Not Available"}</p>
+        <p className="text-gray-600 mt-1"><strong>Distance:</strong> {nearestDistance} km</p>
+      </div>
+    )}
+    {/* Initiate Return Button */}
+    <button
+      onClick={() => navigate("/return-package")}
+      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
+    >
+      Initiate Return
+    </button>
+      
+     
+        
+    
     </div>
   );
 }
+
 
 function Card({ title, desc, onClick }) {
   return (

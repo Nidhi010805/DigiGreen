@@ -91,57 +91,74 @@ const Hero = () => {
         </motion.div>
       </motion.section>
 
-      <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={stagger}
-        className="py-12 relative px-4 z-10"
-      >
-        <div className="absolute top-0 left-0 w-40 h-40 md:w-72 md:h-72 bg-teal-500/30 rounded-full blur-3xl z-0" />
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="backdrop-blur-lg bg-white/50 border border-white/40 rounded-xl p-6 md:p-12 shadow-md">
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold text-start text-teal-600 mb-10">
-              FEATURES
-            </motion.h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-              {[{
-                icon: "/icon1.png",
-                title: "AI-Powered Demand Forecasting",
-                text: "Lower emissions via smarter shipping & packaging"
-              }, {
-                icon: "/icon3.png",
-                title: "Route Optimization",
-                text: "Minimize delivery emissions and lead time"
-              }, {
-                icon: "/icon2.png",
-                title: "Real-Time CO₂ & Waste Tracking Dashboard",
-                text: "Get actionable carbon data & suggestions"
-              }, {
-                icon: "/icon4.png",
-                title: "Packaging Return & Reward System",
-                text: "Gamified incentives for circular ecommerce"
-              }].map(({ icon, title, text }, index) => (
-                <motion.div
-                  key={index}
-                  variants={fadeInUp}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex items-start p-4 gap-4"
-                >
-                  <div className="w-24 h-24 p-2 rounded-lg backdrop-blur-md bg-white/10 border shadow-black-700/50 shadow-md flex items-center justify-center">
-                    <img src={icon} alt={title} className="w-16 h-16" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-semibold text-black mb-1 text-base sm:text-lg">{title}</h3>
-                    <p className="text-sm text-gray-600">{text}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+     <motion.section
+  initial="hidden"
+  whileInView="visible"
+  viewport={{ once: true }}
+  variants={stagger}
+  className="py-20 relative px-6 z-10 bg-gray-50"
+>
+  {/* Background Decoration */}
+  <div className="absolute top-0 left-0 w-40 h-40 md:w-72 md:h-72 bg-green-400/20 rounded-full blur-3xl z-0" />
+  <div className="absolute bottom-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-400/20 rounded-full blur-3xl z-0" />
+
+  <div className="max-w-6xl mx-auto relative z-10">
+    <motion.h2 
+      variants={fadeInUp} 
+      className="text-3xl md:text-4xl font-bold text-center text-teal-600 mb-4"
+    >
+      Key Features & Advantages
+    </motion.h2>
+    <motion.p
+      variants={fadeInUp}
+      className="text-gray-600 text-center max-w-2xl mx-auto mb-12"
+    >
+      Smart. Standardized. Sustainable. Our ecosystem enables transparency, rewards, and scalability.
+    </motion.p>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+      {[{
+        icon: "/qr.png",
+        title: "Unique QR Code Tracking",
+        text: "Track every package’s journey with full lifecycle visibility"
+      }, {
+        icon: "/app.png",
+        title: "User & Retailer Apps",
+        text: "Frictionless returns & verifications for all stakeholders"
+      }, {
+        icon: "/coins.png",
+        title: "GreenCoins Reward System",
+        text: "Motivate consumers with cashback & reward points"
+      }, {
+        icon: "/dashboard.png",
+        title: "Real-Time Tracking Dashboard",
+        text: "Brands track recycling data & EPR compliance instantly"
+      }, {
+        icon: "/ai.png",
+        title: "AI Damage Detection (Future)",
+        text: "Ensure only reusable packaging is re-circulated"
+      }, {
+        icon: "/blockchain.png",
+        title: "Blockchain Traceability (Future)",
+        text: "Tamper-proof audit trail for government & brands"
+      }].map(({ icon, title, text }, index) => (
+        <motion.div
+          key={index}
+          variants={fadeInUp}
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="flex flex-col items-center text-center p-6 rounded-xl bg-white shadow-md hover:shadow-xl transition-all"
+        >
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <img src={icon} alt={title} className="w-10 h-10" />
           </div>
-        </div>
-        <div className="absolute bottom-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-500/30 rounded-full blur-3xl z-0" />
-      </motion.section>
+          <h3 className="font-semibold text-teal-700 mb-2 text-lg">{title}</h3>
+          <p className="text-sm text-gray-600">{text}</p>
+        </motion.div>
+      ))}
+    </div>
+  </div>
+</motion.section>
+
 
       <motion.section 
         initial="hidden" 
@@ -168,33 +185,41 @@ const Hero = () => {
       </motion.section>
 
       <motion.section
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeInUp}
-        className="pt-24 pb-16 px-4 relative z-10"
-      >
-        <div className="absolute top-0 left-0 w-40 h-40 md:w-72 md:h-72 bg-teal-500/30 rounded-full blur-3xl z-0" />
-        <motion.div className="flex flex-col items-center text-center relative z-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-4">Ready to make an Impact?</h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-6 text-sm md:text-base">
-            Let’s drive smarter routes, greener deliveries, and circular packaging — CO₂-optimized ecommerce is here.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleCTAClick}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-semibold text-sm md:text-base"
-          >
-            {role === "user"
-              ? "Collect more Green Points"
-              : role === "retailer"
-              ? "Manage Smarty"
-              : "Explore more Features"}
-          </motion.button>
-        </motion.div>
-        <div className="absolute bottom-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-500/30 rounded-full blur-3xl z-0" />
-      </motion.section>
+  initial="hidden"
+  whileInView="visible"
+  viewport={{ once: true }}
+  variants={fadeInUp}
+  className="relative py-20 px-6 z-10 bg-gradient-to-b from-white via-green-50 to-green-100 text-center"
+>
+  {/* Decorative Circles */}
+  <div className="absolute top-0 left-0 w-40 h-40 md:w-72 md:h-72 bg-green-400/20 rounded-full blur-3xl z-0" />
+  <div className="absolute bottom-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-400/20 rounded-full blur-3xl z-0" />
+
+  <motion.div className="relative z-10 max-w-3xl mx-auto">
+    <h2 className="text-3xl md:text-4xl font-bold text-green-700 mb-4">
+      One Nation, One Packaging — <span className="text-teal-600">Zero Waste</span>
+    </h2>
+    <p className="text-gray-700 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+      Join India’s first unified, reward-based circular packaging ecosystem.  
+      Replace <span className="font-semibold">use-and-throw</span> with  
+      <span className="font-semibold"> use-return-reward</span> and be part of the green revolution.
+    </p>
+
+    <motion.button
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={handleCTAClick}
+      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base shadow-lg transition-all"
+    >
+      {role === "user"
+        ? "Start Returning & Earning"
+        : role === "retailer"
+        ? "Join as Retail Partner"
+        : "Be a Part of EcooLoop"}
+    </motion.button>
+  </motion.div>
+</motion.section>
+
     </div>
   );
 };

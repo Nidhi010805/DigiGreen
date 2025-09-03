@@ -21,47 +21,85 @@ enum OrderStatus {
 }
 
 model User {
-  id              String            @id @default(uuid())
-  name            String
-  email           String            @unique
-  password        String
-  role            Role              @default(user)
-  mobile          String?
-  profilePhoto    String?
-  greenPoints     Int               @default(0)
-  cashbackEarned  Int               @default(0) // Total cashback mila
-  createdAt       DateTime          @default(now())
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           Role     @default(user)
+  profilePhoto   String?
+  greenPoints    Int      @default(0)
+  cashbackEarned Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  userProfile UserProfile?
+  retailer    Retailer?
+
   returns         Return[]
   orders          Order[]
   likes           Like[]
   cartItems       Cart[]
   ReturnPackaging ReturnPackaging[]
   redeemedItems   RedeemHistory[]
-  // Redeemed items ka record
+  notifications   Notification[]
+}
 
-  notifications Notification[]
+model UserProfile {
+  id      String  @id @default(uuid())
+  userId  String  @unique
+  mobile  String?
+  address String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Retailer {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  storeName       String
+  category        String
+  phone           String
+  acceptedItems   String[]
+  incentiveEarned Int      @default(0) // 💡 retailer ke liye incentive
+  location        Json
+  createdAt       DateTime @default(now())
+
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  returnPackages ReturnPackaging[]
 }
 
 model Product {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
   description   String?
   category      String
-  material      String
-  size          String
   imageUrl      String
   recyclable    Boolean
-  price         Int      @default(0)
-  pointsPerUnit Int      @default(1)
-  createdAt     DateTime @default(now())
+  price         Int       @default(0)
+  pointsPerUnit Int       @default(1)
+  createdAt     DateTime  @default(now())
   returns       Return[]
   orders        Order[]
   likedBy       Like[]
   cartedBy      Cart[]
-
-  @@index([category])
-  @@index([material])
+  packages      Package[]
 }
+
+model Package {
+  id            String  @id @default(uuid())
+  productId     String?      // optional
+  type          String
+  material      String
+  size          String
+  recyclable    Boolean @default(true)
+  biodegradable Boolean @default(false)
+  barcode       String  @unique
+  isReturned    Boolean @default(false)
+
+  product       Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  returns       ReturnPackaging[]
+  orderPackages OrderPackage[]
+}
+
 
 model Return {
   id         String   @id @default(uuid())
@@ -83,9 +121,9 @@ model Order {
   orderedAt DateTime    @default(now())
   status    OrderStatus @default(pending)
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  returnPackaging ReturnPackaging?
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderPackages OrderPackage[]
 }
 
 model Like {
@@ -113,30 +151,52 @@ model Cart {
   @@unique([userId, productId])
 }
 
-model ReturnPackaging {
-  id       String  @id @default(uuid())
-  orderId  String  @unique
-  userId   String
-  material String?
+model OrderPackage {
+  id        String @id @default(uuid())
+  orderId   String
+  packageId String
 
-  size      String?
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  order   Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  package Package           @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  returns ReturnPackaging[]
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@unique([orderId, packageId])
 }
 
+model ReturnPackaging {
+  id             String  @id @default(uuid())
+  packageId      String
+  userId         String
+  retailerId     String?
+  orderPackageId String?
+
+ 
+  packageName String?
+  category    String?
+  size        String?
+  weight      Int?
+  photo       String?
+  qrCode      String?
+uniqueBarcode  String   @unique 
+  status    String   @default("pending")
+  cashback  Int      @default(0)
+  scannedAt DateTime @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package      Package       @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  retailer     Retailer?     @relation(fields: [retailerId], references: [id], onDelete: SetNull)
+  orderPackage OrderPackage? @relation(fields: [orderPackageId], references: [id], onDelete: SetNull)
+}
+
+
 model RedeemHistory {
-  id         String   @id @default(uuid())
-  userId     String
-  item       String
-  pointsUsed Int
-  type       String? 
-  // e.g., cashback, product, etc.
-   cashbackAmount Int  @default(0)
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  userId         String
+  item           String
+  pointsUsed     Int
+  type           String?
+  cashbackAmount Int      @default(0)
+  createdAt      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -145,8 +205,8 @@ model Notification {
   id        Int      @id @default(autoincrement())
   userId    String
   message   String
-  link      String? 
-  type      String // "Return" | "Reward" | "Offer"
+  link      String?
+  type      String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 

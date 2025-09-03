@@ -11,21 +11,54 @@ const generateToken = (user) => {
 };
 
 export const signup = async (req, res) => {
-  const { name, email, password, role } = req.body;
-  
+  const { role } = req.body;
+
   try {
+    const { email } = req.body;
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ message: "Email already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: role || "user",
-      },
-    });
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    let newUser;
+
+    if (role === "retailer") {
+      const { name, storeName, location, phone, acceptedItems, category } = req.body;
+
+      newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: "retailer",
+          retailer: {
+            create: {
+              storeName,
+              category,
+              phone,
+              acceptedItems,
+              location, // pura object { city, lat, lng }
+            },
+          },
+        },
+        include: { retailer: true },
+      });
+    } else {
+      const { name, mobile, address } = req.body;
+
+      newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: "user",
+          userProfile: {
+            create: { mobile, address },
+          },
+        },
+        include: { userProfile: true },
+      });
+    }
 
     const token = generateToken(newUser);
     res.status(201).json({ user: newUser, token });
@@ -33,7 +66,6 @@ export const signup = async (req, res) => {
     res.status(500).json({ message: "Signup failed", error: error.message });
   }
 };
-
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {

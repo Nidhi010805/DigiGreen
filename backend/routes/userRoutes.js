@@ -18,9 +18,14 @@ router.get("/profile", authMiddleware, async (req, res) => {
         id: true,
         name: true,
         email: true,
-        mobile: true,
         greenPoints: true,
         profilePhoto: true,
+        userProfile: {
+          select: {
+            mobile: true,
+            address: true,
+          },
+        },
       },
     });
 
@@ -47,6 +52,8 @@ router.get("/profile", authMiddleware, async (req, res) => {
 
     res.json({
       ...user,
+      mobile: user.userProfile?.mobile || null,
+      address: user.userProfile?.address || null,
       totalReturns,
       totalOrders,
       totalApproved,
@@ -62,24 +69,39 @@ router.get("/profile", authMiddleware, async (req, res) => {
 
 
 // Update Profile
+
 router.put("/update", authMiddleware, async (req, res) => {
-  const { name, mobile, email } = req.body;
+  const { name, email, mobile, address } = req.body;
   if (!name || !email) return res.status(400).json({ error: "Name and Email required" });
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
-      data: { name, mobile, email },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        mobile: true,
-        greenPoints: true,
-        profilePhoto: true,
+      data: {
+        name,
+        email,
+        userProfile: {
+          upsert: {
+            create: { mobile, address },
+            update: { mobile, address },
+          },
+        },
+      },
+      include: { userProfile: true },
+    });
+
+    res.json({
+      message: "Profile updated",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        profilePhoto: updatedUser.profilePhoto,
+        greenPoints: updatedUser.greenPoints,
+        ...updatedUser.userProfile, 
       },
     });
-    res.json({ message: "Profile updated", user: updatedUser });
+
   } catch (error) {
     res.status(500).json({ error: "Update failed", details: error.message });
   }

@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 import http from "http";
+import path from "path";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -14,6 +15,8 @@ import returnPackagingRoutes from "./routes/returnPackagingRoutes.js";
 import redeemRoutes from "./routes/redeemRoutes.js";
 import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import retailerRoutes from "./routes/retailerRoutes.js";
+import returnRoutes from "./routes/returnRoutes.js";
 
 
 
@@ -43,10 +46,11 @@ app.use((req, res, next) => {
 });
 
 
-
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
 
+app.use("/api/retailers", retailerRoutes);
+app.use("/api/returns", returnRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
