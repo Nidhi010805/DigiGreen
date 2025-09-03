@@ -1,6 +1,12 @@
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
-import { submitReturn, getUserReturns } from "../controllers/returnController.js";
+import {
+  submitReturn,
+  getUserReturns,
+  approveReturn,
+  rejectReturn,
+  getPendingReturns,
+} from "../controllers/returnController.js";
 import multer from "multer";
 import path from "path";
 
@@ -16,10 +22,20 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Submit a return
+
 router.post("/submit", authMiddleware, upload.single("photo"), submitReturn);
 
-// Get user returns
+// 2. Get all returns of logged-in user
 router.get("/", authMiddleware, getUserReturns);
+
+
+// 3. Approve a return
+router.patch("/:id/approve", authMiddleware, approveReturn);
+
+// 4. Reject a return
+router.patch("/:id/reject", authMiddleware, rejectReturn);
+
+// 5. Get all pending returns
+router.get("/pending/all", authMiddleware, getPendingReturns);
 
 export default router;

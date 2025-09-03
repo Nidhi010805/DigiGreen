@@ -1,21 +1,50 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import authMiddleware from "../middleware/authMiddleware.js";
 import { 
   getAllPackagingReturns,
   getPendingPackagingReturns,
   approvePackagingReturn,
   rejectPackagingReturn,
   initiatePackagingReturn,
-  getMyPackagingReturns // ✅ Added for user return history
+  getMyPackagingReturns,
+  submitReturn,
+  getUserReturns
 } from "../controllers/returnPackagingController.js";
-import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/pending", authMiddleware, getPendingPackagingReturns);
-router.get("/all", authMiddleware, getAllPackagingReturns);
-router.get("/my-packaging", authMiddleware, getMyPackagingReturns); // ✅ User's return history route
+// Multer config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
 
-router.post("/initiate", authMiddleware, initiatePackagingReturn);  
+// ------------------ USER ROUTES ------------------
+
+// Submit a return (with photo upload)
+router.post("/submit", authMiddleware, upload.single("photo"), submitReturn);
+
+// Get all returns for logged-in user
+router.get("/my-packaging", authMiddleware, getMyPackagingReturns);  // history (detailed)
+router.get("/", authMiddleware, getUserReturns);                    // simple list
+
+
+// ------------------ ADMIN ROUTES ------------------
+
+// Get pending returns (for approval)
+router.get("/pending", authMiddleware, getPendingPackagingReturns);
+
+// Get all returns (admin view)
+router.get("/all", authMiddleware, getAllPackagingReturns);
+
+// Approve / Reject / Initiate return
+router.post("/initiate", authMiddleware, initiatePackagingReturn);
 router.put("/approve/:id", authMiddleware, approvePackagingReturn);
 router.put("/reject/:id", authMiddleware, rejectPackagingReturn);
 

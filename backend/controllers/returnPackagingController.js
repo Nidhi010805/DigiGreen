@@ -8,7 +8,70 @@ const calculatePoints = (material, size) => {
   return 1;
 };
 
-// 1️⃣ User initiates packaging return
+// 1️⃣ User submits a return (with photo)
+export const submitReturn = async (req, res) => {
+  try {
+    const { packageName, category, size, weight, qrCode, uniqueBarcode } = req.body;
+    let photoFile = null;
+    if (req.file) photoFile = req.file.filename;
+
+    const newReturn = await prisma.returnPackaging.create({
+      data: {
+        user: { connect: { id: req.user.id } },
+        package: {
+          connectOrCreate: {
+            where: { barcode: uniqueBarcode },
+            create: {
+              type: "Unknown",
+              material: "Unknown",
+              size,
+              barcode: uniqueBarcode,
+              recyclable: true,
+              biodegradable: false,
+            },
+          },
+        },
+        packageName,
+        category,
+        size,
+        weight: Number(weight),
+        photo: photoFile,
+        qrCode,
+        uniqueBarcode,
+        status: "initiated",
+      },
+    });
+
+    const io = req.app.get("io");
+    io.to(`user-${req.user.id}`).emit("newNotification", {
+      message: `Your return for package "${packageName}" has been submitted.`,
+      type: "Return",
+      returnId: newReturn.id,
+      createdAt: new Date(),
+    });
+
+    res.json({ success: true, data: newReturn });
+  } catch (err) {
+    console.error("Return submission failed:", err);
+    res.status(500).json({ success: false, message: "Failed to submit return" });
+  }
+};
+
+// 2️⃣ User simple return history
+export const getUserReturns = async (req, res) => {
+  try {
+    const returns = await prisma.returnPackaging.findMany({
+      where: { userId: req.user.id },
+      orderBy: { scannedAt: "desc" },
+    });
+    res.json({ success: true, data: returns });
+  } catch (err) {
+    console.error("Failed to fetch returns:", err.message);
+    res.status(500).json({ success: false, message: "Failed to get returns" });
+  }
+};
+
+// 3️⃣ User initiates packaging return (by order)
 export const initiatePackagingReturn = async (req, res) => {
   const userId = req.user.id;
   const { orderId } = req.body;
@@ -31,19 +94,12 @@ export const initiatePackagingReturn = async (req, res) => {
       return res.status(400).json({ message: "Return already initiated for this order" });
     }
 
-    // If rejected, delete old return record and allow fresh initiation
     if (existingReturn && existingReturn.status === "rejected") {
-      await prisma.returnPackaging.delete({
-        where: { id: existingReturn.id },
-      });
+      await prisma.returnPackaging.delete({ where: { id: existingReturn.id } });
     }
 
     await prisma.returnPackaging.create({
-      data: {
-        userId,
-        orderId,
-        status: "pending",
-      },
+      data: { userId, orderId, status: "pending" },
     });
 
     res.json({ message: "Return initiated successfully" });
@@ -53,16 +109,13 @@ export const initiatePackagingReturn = async (req, res) => {
   }
 };
 
-
-// 2️⃣ Get user's return history
+// 4️⃣ Get user's detailed return history
 export const getMyPackagingReturns = async (req, res) => {
   try {
     const returns = await prisma.returnPackaging.findMany({
       where: { userId: req.user.id },
       include: {
-        order: {
-          include: { product: true },
-        },
+        order: { include: { product: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -84,14 +137,12 @@ export const getMyPackagingReturns = async (req, res) => {
   }
 };
 
-// 3️⃣ Retailer approves return
+// 5️⃣ Retailer approves return
 export const approvePackagingReturn = async (req, res) => {
   const { id } = req.params;
   const { productId } = req.body;
 
-  if (!productId) {
-    return res.status(400).json({ message: "Product ID is required from scanner" });
-  }
+  if (!productId) return res.status(400).json({ message: "Product ID is required from scanner" });
 
   try {
     const packagingReturn = await prisma.returnPackaging.findUnique({
@@ -109,32 +160,22 @@ export const approvePackagingReturn = async (req, res) => {
     const perUnitPoints = calculatePoints(product.material, product.size);
     const totalPoints = perUnitPoints * quantity;
 
-    // Update return status
     await prisma.returnPackaging.update({
       where: { id },
       data: { status: "approved", material: product.material, size: product.size },
     });
 
-    // Add green points to user
     await prisma.user.update({
       where: { id: packagingReturn.userId },
       data: { greenPoints: { increment: totalPoints } },
     });
 
-    // Notification message
     const message = `Your return was approved! You earned ${totalPoints} Green Points.`;
 
-    // Save notification to DB
     const notification = await prisma.notification.create({
-      data: {
-        userId: packagingReturn.userId,
-        message,
-        type: "Return",
-        link: "/my-returns",
-      },
+      data: { userId: packagingReturn.userId, message, type: "Return", link: "/my-returns" },
     });
 
-    // Emit real-time notification
     const io = req.app.get("io");
     io.to(`user-${packagingReturn.userId}`).emit("newNotification", {
       id: notification.id,
@@ -144,19 +185,14 @@ export const approvePackagingReturn = async (req, res) => {
       createdAt: notification.createdAt,
     });
 
-    res.json({
-      message: "Return approved using scanned Product ID",
-      material: product.material,
-      size: product.size,
-      pointsAdded: totalPoints,
-    });
+    res.json({ message: "Return approved", pointsAdded: totalPoints });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-// 4️⃣ Retailer rejects return
+// 6️⃣ Retailer rejects return
 export const rejectPackagingReturn = async (req, res) => {
   const { id } = req.params;
   try {
@@ -177,7 +213,7 @@ export const rejectPackagingReturn = async (req, res) => {
   }
 };
 
-// 5️⃣ Admin - Get All Packaging Returns (Filter optional)
+// 7️⃣ Admin - Get all returns
 export const getAllPackagingReturns = async (req, res) => {
   const { status } = req.query;
   try {
@@ -196,7 +232,7 @@ export const getAllPackagingReturns = async (req, res) => {
   }
 };
 
-// 6️⃣ Admin - Get Pending Returns for Review
+// 8️⃣ Admin - Get pending returns
 export const getPendingPackagingReturns = async (req, res) => {
   try {
     const returns = await prisma.returnPackaging.findMany({
