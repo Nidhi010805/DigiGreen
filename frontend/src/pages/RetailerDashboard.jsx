@@ -12,9 +12,7 @@ export default function RetailerDashboard() {
   // Modal & form states
   const [showScan, setShowScan] = useState(false);
   const [selectedReturn, setSelectedReturn] = useState(null);
-  const [material, setMaterial] = useState("");
-  const [size, setSize] = useState("");
- 
+  const [otp, setOtp] = useState("");
 
   const navigate = useNavigate();
 
@@ -30,13 +28,20 @@ export default function RetailerDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
+
+        // Fetch retailer profile
         const profileRes = await API.get("/api/user/profile");
         setRetailer(profileRes.data);
 
-        const returnsRes = await API.get(
-          `/api/returnpackaging/all?status=${activeTab}`
-        );
-        setReturns(returnsRes.data);
+        // Fetch returns
+        const returnsRes = await API.get(`/api/returns/${activeTab}/all`);
+        const returnsData = Array.isArray(returnsRes.data)
+          ? returnsRes.data
+          : Array.isArray(returnsRes.data.data)
+          ? returnsRes.data.data
+          : [];
+        setReturns(returnsData);
+
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -47,46 +52,75 @@ export default function RetailerDashboard() {
     fetchData();
   }, [navigate, activeTab]);
 
-  const openScanForm = (ret) => {
+const openScanForm = async (ret) => {
+  try {
+    // 🔹 Yaha declare karna zaroori hai
+    const res = await API.post(`/api/returns/${ret.id}/send-otp`);
+
     setSelectedReturn(ret);
-    setMaterial("");
-    setSize("");
+    setOtp("");
     setShowScan(true);
-  };
+
+    if (res.data?.otp) {
+      alert(`Demo OTP: ${res.data.otp}`);
+    } else {
+      alert("OTP generated, please check console/logs.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate OTP!");
+  }
+};
+const handleReject = (id) => {
+  console.log("Rejecting return id:", id); // ✅ debug
+  if (!id) {
+    alert("Invalid return ID!");
+    return;
+  }
+  if (window.confirm("Are you sure you want to reject this return? ❌")) {
+    handleAction(id, "reject");
+  }
+};
+
+
+
 
   const handleFinalApprove = async () => {
-    if (!material || !size) {
-      alert("Please select both material and size.");
-      return;
-    }
-    try {
-      await API.put(`/api/returnpackaging/approve/${selectedReturn.id}`, {
-        material,
-        size,
-        productId: selectedReturn.order.product.id,
-      });
-      alert("Return approved and points added!");
+  try {
+    const res = await API.post(`/api/returns/${selectedReturn.id}/verify-otp`, {
+      otp,
+    });
+
+    if (res.data.success) {
+      alert(`Return approved successfully! ✅ Earned ${res.data.reward?.points} points`);
       setReturns((prev) => prev.filter((r) => r.id !== selectedReturn.id));
       setShowScan(false);
       setSelectedReturn(null);
-      setMaterial("");
-      setSize("");
-    } catch (err) {
-      console.error(err.response?.data || err.message || err);
-      alert("Approval failed!");
+      setOtp("");
+    } else {
+      alert(res.data.message || "OTP verification failed!");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("OTP verification failed!");
+  }
+};
+
 
   const handleAction = async (id, action) => {
-    try {
-      await API.put(`/api/returnpackaging/${action}/${id}`);
-      alert(`Return ${action}ed successfully!`);
-      setReturns((prev) => prev.filter((r) => r.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert("Action failed");
-    }
-  };
+  try {
+    const res = await API.patch(`/api/returns/${id}/${action}`);
+    console.log("Action response:", res.data);
+    alert(`Return ${action}ed successfully!`);
+    setReturns((prev) => prev.filter((r) => r.id !== id));
+  } catch (err) {
+    
+    alert(
+      err.response?.data?.message || "Action failed due to server/network error!"
+    );
+  }
+};
+
 
   if (!retailer) {
     return (
@@ -131,10 +165,29 @@ export default function RetailerDashboard() {
             <strong>Email:</strong> {retailer.email}
           </p>
           <p>
-            <strong>Mobile:</strong> {retailer.mobile || "Not Provided"}
+            <strong>Mobile:</strong>{" "}
+            {retailer.retailer?.phone ||
+              retailer.userProfile?.mobile ||
+              "Not Provided"}
           </p>
           <p>
-            <strong>Green Points:</strong> {retailer.greenPoints}
+            <strong>Green Points:</strong> {retailer.greenPoints || 0}
+          </p>
+          <p>
+            <strong>Store:</strong> {retailer.retailer?.storeName || "N/A"}
+          </p>
+          <p>
+            <strong>Category:</strong> {retailer.retailer?.category || "N/A"}
+          </p>
+          <p>
+            <strong>Accepted Items:</strong>{" "}
+            {retailer.retailer?.acceptedItems?.join(", ") || "N/A"}
+          </p>
+          <p>
+            <strong>City:</strong> {retailer.retailer?.location?.city || "N/A"}
+          </p>
+          <p>
+            <strong>Address:</strong> {retailer.userProfile?.address || "N/A"}
           </p>
         </div>
       </div>
@@ -197,10 +250,13 @@ export default function RetailerDashboard() {
               >
                 <div className="mb-2">
                   <p className="font-medium">User: {ret.user?.name}</p>
-                  <p>Material: {ret.order?.product?.material}</p>
-                  <p>Size: {ret.order?.product?.size}</p>
+                  <p>Material: {ret.package?.material || "Unknown"}</p>
+                  <p>Size: {ret.package?.size || ret.size || "Unknown"}</p>
+                  <p>Weight: {ret.weight} kg</p>
+                  <p>Category: {ret.category}</p>
+                  <p>Barcode: {ret.uniqueBarcode}</p>
                   <p className="text-sm text-gray-500">
-                    Initiated At: {new Date(ret.createdAt).toLocaleString()}
+                    Initiated At: {new Date(ret.scannedAt).toLocaleString()}
                   </p>
                 </div>
                 {activeTab === "pending" && (
@@ -211,12 +267,13 @@ export default function RetailerDashboard() {
                     >
                       Approve
                     </button>
-                    <button
-                      onClick={() => handleAction(ret.id, "reject")}
-                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                    >
-                      Reject
-                    </button>
+                   <button
+          onClick={() => handleReject(ret.id)}
+        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+          >
+           Reject
+       </button>
+
                   </div>
                 )}
               </li>
@@ -225,37 +282,21 @@ export default function RetailerDashboard() {
         )}
       </div>
 
-      {/* Modal for size & material selection */}
+      {/* Modal for OTP verification */}
       {showScan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
             <h2 className="text-lg font-semibold mb-4">
-              Select Material & Size
+              Enter OTP for Approval
             </h2>
 
-            <label className="block mb-2">Material:</label>
-            <select
-              value={material}
-              onChange={(e) => setMaterial(e.target.value)}
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
               className="border px-3 py-2 w-full mb-4"
-            >
-              <option value="">Select Material</option>
-              <option value="Plastic">Plastic</option>
-              <option value="Paper">Paper</option>
-              <option value="Cardboard">Cardboard</option>
-            </select>
-
-            <label className="block mb-2">Size:</label>
-            <select
-              value={size}
-              onChange={(e) => setSize(e.target.value)}
-              className="border px-3 py-2 w-full mb-4"
-            >
-              <option value="">Select Size</option>
-              <option value="Small">Small</option>
-              <option value="Medium">Medium</option>
-              <option value="Large">Large</option>
-            </select>
+            />
 
             <div className="flex justify-end gap-2">
               <button
@@ -267,9 +308,9 @@ export default function RetailerDashboard() {
               <button
                 className="px-4 py-2 bg-green-600 text-white rounded"
                 onClick={handleFinalApprove}
-                disabled={!material || !size}
+                disabled={!otp}
               >
-                Approve & Add Points
+                Verify & Approve
               </button>
             </div>
           </div>

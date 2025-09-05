@@ -3,9 +3,11 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import {
   submitReturn,
   getUserReturns,
-  approveReturn,
   rejectReturn,
   getPendingReturns,
+  getReturnsByStatus,
+  sendReturnOTP,
+  verifyReturnOTP
 } from "../controllers/returnController.js";
 import multer from "multer";
 import path from "path";
@@ -22,20 +24,24 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-
+// 📦 User submits return
 router.post("/submit", authMiddleware, upload.single("photo"), submitReturn);
 
-// 2. Get all returns of logged-in user
+// 📦 User ke sare returns
 router.get("/", authMiddleware, getUserReturns);
+// 🔑 OTP based approval
+router.post("/:id/send-otp", authMiddleware, sendReturnOTP);
+router.post("/:id/verify-otp", authMiddleware, verifyReturnOTP);
 
+// 📦 Returns by status
+router.get("/:status/all", authMiddleware, getReturnsByStatus);
 
-// 3. Approve a return
-router.patch("/:id/approve", authMiddleware, approveReturn);
-
-// 4. Reject a return
+// ❌ Reject return
 router.patch("/:id/reject", authMiddleware, rejectReturn);
 
-// 5. Get all pending returns
+// ⏳ Pending returns
 router.get("/pending/all", authMiddleware, getPendingReturns);
+
+
 
 export default router;

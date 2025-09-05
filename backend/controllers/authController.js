@@ -22,27 +22,37 @@ export const signup = async (req, res) => {
 
     let newUser;
 
-    if (role === "retailer") {
-      const { name, storeName, location, phone, acceptedItems, category } = req.body;
+   if (role === "retailer") {
+  const { name, storeName, location, phone, acceptedItems, category } = req.body;
 
-      newUser = await prisma.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          role: "retailer",
-          retailer: {
-            create: {
-              storeName,
-              category,
-              phone,
-              acceptedItems,
-              location, // pura object { city, lat, lng }
-            },
+  if (!location || !location.city || !location.lat || !location.lng) {
+    return res.status(400).json({ message: "Complete location is required" });
+  }
+
+  newUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      role: "retailer",
+      retailer: {
+        create: {
+          storeName,
+          category,
+          phone,
+          acceptedItems, // ensure array
+          location: {
+            city: location.city,
+            lat: location.lat,
+            lng: location.lng
           },
         },
-        include: { retailer: true },
-      });
+      },
+    },
+    include: { retailer: true },
+  });
+
+
     } else {
       const { name, mobile, address } = req.body;
 
@@ -69,7 +79,7 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email },include: { retailer: true, userProfile: true }, });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isValid = await bcrypt.compare(password, user.password);
@@ -80,11 +90,8 @@ export const login = async (req, res) => {
     res.status(200).json({
       token,
       role: user.role,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
+      user,
+        
     });
   } catch (error) {
     res.status(500).json({ message: "Login failed", error: error.message });

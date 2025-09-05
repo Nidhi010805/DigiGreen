@@ -60,6 +60,7 @@ export default function Signup() {
     e.preventDefault();
     try {
       const formData = role === "user" ? userForm : retailerForm;
+      console.log("Submitting form data:", formData);
       const res = await API.post("/api/auth/signup", { ...formData, role });
 
       if (res.status === 201) {
