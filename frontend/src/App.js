@@ -65,7 +65,12 @@ const isAuthenticated = token && token !== "undefined" && token !== "";
             
             {/* User Routes */}
             <Route path="/user/dashboard" element={<UserDashboard />} />
-            <Route path="/user/settings" element={<UserSettings />} />
+            {/* User Settings */}
+<Route path="/user/settings" element={<UserSettings />} />
+
+{/* Retailer Settings */}
+<Route path="/retailer/settings" element={<UserSettings />} />
+
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/likes" element={<Likes />} />
             <Route path="/logout" element={<Logout />} />

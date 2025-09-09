@@ -7,7 +7,8 @@ import {
   getPendingReturns,
   getReturnsByStatus,
   sendReturnOTP,
-  verifyReturnOTP
+  verifyReturnOTP,
+ getRetailerHistory
 } from "../controllers/returnController.js";
 import multer from "multer";
 import path from "path";
@@ -32,15 +33,17 @@ router.get("/", authMiddleware, getUserReturns);
 // 🔑 OTP based approval
 router.post("/:id/send-otp", authMiddleware, sendReturnOTP);
 router.post("/:id/verify-otp", authMiddleware, verifyReturnOTP);
+// ⏳ Pending returns
+router.get("/pending/all", authMiddleware, getPendingReturns);
 
 // 📦 Returns by status
 router.get("/:status/all", authMiddleware, getReturnsByStatus);
 
+
 // ❌ Reject return
 router.patch("/:id/reject", authMiddleware, rejectReturn);
 
-// ⏳ Pending returns
-router.get("/pending/all", authMiddleware, getPendingReturns);
+router.get("/history", authMiddleware, getRetailerHistory);
 
 
 

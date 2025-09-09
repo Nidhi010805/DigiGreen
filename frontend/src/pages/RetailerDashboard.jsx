@@ -8,13 +8,32 @@ export default function RetailerDashboard() {
   const [returns, setReturns] = useState([]);
   const [activeTab, setActiveTab] = useState("pending");
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Modal & form states
   const [showScan, setShowScan] = useState(false);
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [otp, setOtp] = useState("");
+  // Stats calculation
+const approvedCount = history.filter(r => r.status?.toLowerCase() === "approved").length;
+const rejectedCount = history.filter(r => r.status?.toLowerCase() === "rejected").length;
+
 
   const navigate = useNavigate();
+
+  const fetchHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const res = await API.get("/api/returns/history");
+      if (res.data.success) setHistory(res.data.data);
+      else alert(res.data.message || "Failed to fetch history");
+      setHistoryLoading(false);
+    } catch (err) {
+      console.error("Fetch history error:", err);
+      setHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,18 +48,18 @@ export default function RetailerDashboard() {
       try {
         setLoading(true);
 
-        // Fetch retailer profile
         const profileRes = await API.get("/api/user/profile");
         setRetailer(profileRes.data);
 
-        // Fetch returns
-        const returnsRes = await API.get(`/api/returns/${activeTab}/all`);
-        const returnsData = Array.isArray(returnsRes.data)
-          ? returnsRes.data
-          : Array.isArray(returnsRes.data.data)
-          ? returnsRes.data.data
-          : [];
-        setReturns(returnsData);
+        if (activeTab === "pending") {
+          const returnsRes = await API.get(`/api/returns/${activeTab}/all`);
+          const returnsData = Array.isArray(returnsRes.data)
+            ? returnsRes.data
+            : Array.isArray(returnsRes.data.data)
+            ? returnsRes.data.data
+            : [];
+          setReturns(returnsData);
+        } else fetchHistory();
 
         setLoading(false);
       } catch (err) {
@@ -52,79 +71,62 @@ export default function RetailerDashboard() {
     fetchData();
   }, [navigate, activeTab]);
 
-const openScanForm = async (ret) => {
-  try {
-    // 🔹 Yaha declare karna zaroori hai
-    const res = await API.post(`/api/returns/${ret.id}/send-otp`);
+  const openScanForm = async (ret) => {
+    try {
+      const res = await API.post(`/api/returns/${ret.id}/send-otp`);
+      setSelectedReturn(ret);
+      setOtp("");
+      setShowScan(true);
 
-    setSelectedReturn(ret);
-    setOtp("");
-    setShowScan(true);
-
-    if (res.data?.otp) {
-      alert(`Demo OTP: ${res.data.otp}`);
-    } else {
-      alert("OTP generated, please check console/logs.");
+      if (res.data?.otp) alert(`Demo OTP: ${res.data.otp}`);
+      else alert("OTP generated, please check console/logs.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate OTP!");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Failed to generate OTP!");
-  }
-};
-const handleReject = (id) => {
-  console.log("Rejecting return id:", id); // ✅ debug
-  if (!id) {
-    alert("Invalid return ID!");
-    return;
-  }
-  if (window.confirm("Are you sure you want to reject this return? ❌")) {
-    handleAction(id, "reject");
-  }
-};
+  };
 
-
-
+  const handleReject = (id) => {
+    if (!id) return alert("Invalid return ID!");
+    if (window.confirm("Are you sure you want to reject this return? ❌")) {
+      handleAction(id, "reject");
+    }
+  };
 
   const handleFinalApprove = async () => {
-  try {
-    const res = await API.post(`/api/returns/${selectedReturn.id}/verify-otp`, {
-      otp,
-    });
+    try {
+      const res = await API.post(`/api/returns/${selectedReturn.id}/verify-otp`, { otp });
+      if (res.data.success) {
+        alert(`Return approved successfully! ✅ Earned ${res.data.reward?.points || 0} points`);
+        setShowScan(false);
+        setSelectedReturn(null);
+        setOtp("");
 
-    if (res.data.success) {
-      alert(`Return approved successfully! ✅ Earned ${res.data.reward?.points} points`);
-      setReturns((prev) => prev.filter((r) => r.id !== selectedReturn.id));
-      setShowScan(false);
-      setSelectedReturn(null);
-      setOtp("");
-    } else {
-      alert(res.data.message || "OTP verification failed!");
+        const returnsRes = await API.get(`/api/returns/pending/all`);
+        setReturns(Array.isArray(returnsRes.data.data) ? returnsRes.data.data : []);
+        fetchHistory();
+        const profileRes = await API.get("/api/user/profile");
+        setRetailer(profileRes.data);
+      } else alert(res.data.message || "OTP verification failed!");
+    } catch (err) {
+      console.error(err);
+      alert("OTP verification failed!");
     }
-  } catch (err) {
-    console.error(err);
-    alert("OTP verification failed!");
-  }
-};
-
+  };
 
   const handleAction = async (id, action) => {
-  try {
-    const res = await API.patch(`/api/returns/${id}/${action}`);
-    console.log("Action response:", res.data);
-    alert(`Return ${action}ed successfully!`);
-    setReturns((prev) => prev.filter((r) => r.id !== id));
-  } catch (err) {
-    
-    alert(
-      err.response?.data?.message || "Action failed due to server/network error!"
-    );
-  }
-};
-
+    try {
+      const res = await API.patch(`/api/returns/${id}/${action}`);
+      alert(`Return ${action}ed successfully!`);
+      setReturns((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.message || "Action failed!");
+    }
+  };
 
   if (!retailer) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[#e0f4e8] to-[#ffffff]">
         <p className="text-lg text-gray-600">Loading retailer profile...</p>
       </div>
     );
@@ -132,7 +134,7 @@ const handleReject = (id) => {
 
   const profileImg = retailer.profilePhoto
     ? `http://localhost:5000/uploads/${retailer.profilePhoto}`
-    : "https://via.placeholder.com/100?text=Avatar";
+    : "https://placehold.co/100x100?text=Avatar";
 
   const membershipLevel =
     retailer.greenPoints >= 100
@@ -142,86 +144,61 @@ const handleReject = (id) => {
       : "🌿 Bronze Partner";
 
   return (
-    <div className="max-w-7xl mx-auto mt-0 bg-green-300/30 py-10 px-24">
-      {/* Profile Section */}
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-8 bg-white shadow p-6 rounded-lg">
+    <div className="min-h-screen bg-gradient-to-b from-[#e0f4e8] to-[#ffffff] px-4 sm:px-6 md:px-12 lg:px-24 xl:px-36 py-8 mx-auto">
+      {/* Profile */}
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-8 bg-white/80 backdrop-blur-lg border border-gray-200 rounded-xl p-6 shadow-xl gap-6 sm:gap-0">
         <div className="flex items-center gap-4">
-          <img
-            src={profileImg}
-            alt="Profile"
-            className="w-16 h-16 rounded-full border object-cover"
-          />
+          <img src={profileImg} alt="Profile" className="w-16 h-16 rounded-full border object-cover shadow-md" />
           <div>
-            <h1 className="text-2xl font-bold text-green-700">
-              Welcome, {retailer.name}
-            </h1>
+            <h1 className="text-2xl font-bold text-green-700">Welcome, {retailer.name || "Retailer"}</h1>
             <p className="text-gray-500">
-              Membership: <strong>{membershipLevel}</strong>
+              Membership: <strong>{membershipLevel || "N/A"}</strong>
             </p>
           </div>
         </div>
-        <div className="mt-4 sm:mt-0 text-gray-700">
-          <p>
-            <strong>Email:</strong> {retailer.email}
-          </p>
-          <p>
-            <strong>Mobile:</strong>{" "}
-            {retailer.retailer?.phone ||
-              retailer.userProfile?.mobile ||
-              "Not Provided"}
-          </p>
-          <p>
-            <strong>Green Points:</strong> {retailer.greenPoints || 0}
-          </p>
-          <p>
-            <strong>Store:</strong> {retailer.retailer?.storeName || "N/A"}
-          </p>
-          <p>
-            <strong>Category:</strong> {retailer.retailer?.category || "N/A"}
-          </p>
-          <p>
-            <strong>Accepted Items:</strong>{" "}
-            {retailer.retailer?.acceptedItems?.join(", ") || "N/A"}
-          </p>
-          <p>
-            <strong>City:</strong> {retailer.retailer?.location?.city || "N/A"}
-          </p>
-          <p>
-            <strong>Address:</strong> {retailer.userProfile?.address || "N/A"}
-          </p>
+        <div className="mt-4 sm:mt-0 text-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <p><strong>Email:</strong> {retailer.email || "N/A"}</p>
+          <p><strong>Mobile:</strong> {retailer.retailer?.phone || retailer.userProfile?.mobile || "Not Provided"}</p>
+          <p><strong>Green Points:</strong> {retailer.greenPoints || 0}</p>
+          <p><strong>Store:</strong> {retailer.retailer?.storeName || "N/A"}</p>
+          <p><strong>Category:</strong> {retailer.retailer?.category || "N/A"}</p>
+          <p><strong>Accepted Items:</strong> {retailer.retailer?.acceptedItems?.join(", ") || "N/A"}</p>
+          <p><strong>City:</strong> {retailer.retailer?.location?.city || "N/A"}</p>
+          <p><strong>Address:</strong> {retailer.userProfile?.address || "N/A"}</p>
         </div>
       </div>
+    
 
-      {/* Stats Cards */}
+
+    
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <Card
-          title="Total Approved"
-          desc={`${retailer.totalApproved || 0} returns approved`}
-        />
-        <Card
-          title="Total Rejected"
-          desc={`${retailer.totalRejected || 0} returns rejected`}
-        />
-        <Card
-          title="Your Rank"
-          desc={`#${retailer.rank || "N/A"} based on approvals`}
-        />
-        <Card
-          title="Settings"
-          desc="Manage account info"
-          onClick={() => navigate("/user/settings")}
-        />
-      </div>
+  <Card
+    title="Total Approved"
+    desc={`${approvedCount} returns approved`}
+  />
+  <Card
+    title="Total Rejected"
+    desc={`${rejectedCount} returns rejected`}
+  />
+  <Card
+    title="Your Rank"
+    desc={`#${retailer.rank || "N/A"} based on approvals`}
+  />
+  <Card
+    title="Settings"
+    desc="Manage account info"
+    onClick={() => navigate("/retailer/settings")}
+  />
+</div>
+
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {["pending", "approved", "rejected"].map((tab) => (
           <button
             key={tab}
             className={`px-4 py-2 rounded ${
-              activeTab === tab
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700"
+              activeTab === tab ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
             onClick={() => setActiveTab(tab)}
           >
@@ -230,86 +207,85 @@ const handleReject = (id) => {
         ))}
       </div>
 
-      {/* Return List */}
-      <div className="bg-green-500/40 shadow p-6 rounded-lg">
-        <h2 className="text-lg font-semibold mb-4">
-          {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Packaging
-          Returns
+      {/* Returns / History */}
+      <div className="bg-white/80 backdrop-blur-lg border border-gray-200 shadow-xl p-6 rounded-xl">
+        <h2 className="text-lg font-semibold mb-4 text-green-700">
+          {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} {activeTab === "pending" ? "Packaging Returns" : "History"}
         </h2>
 
-        {loading ? (
-          <p className="text-gray-500">Loading {activeTab} returns...</p>
-        ) : returns.length === 0 ? (
-          <p className="text-gray-500">No {activeTab} returns at the moment.</p>
-        ) : (
-          <ul className="space-y-3">
-            {returns.map((ret) => (
-              <li
-                key={ret.id}
-                className="border p-4 bg-white rounded flex justify-between items-center flex-wrap"
-              >
-                <div className="mb-2">
-                  <p className="font-medium">User: {ret.user?.name}</p>
-                  <p>Material: {ret.package?.material || "Unknown"}</p>
-                  <p>Size: {ret.package?.size || ret.size || "Unknown"}</p>
-                  <p>Weight: {ret.weight} kg</p>
-                  <p>Category: {ret.category}</p>
-                  <p>Barcode: {ret.uniqueBarcode}</p>
-                  <p className="text-sm text-gray-500">
-                    Initiated At: {new Date(ret.scannedAt).toLocaleString()}
-                  </p>
-                </div>
-                {activeTab === "pending" && (
+        {activeTab === "pending" ? (
+          loading ? (
+            <p className="text-gray-500">Loading {activeTab} returns...</p>
+          ) : returns.length === 0 ? (
+            <p className="text-gray-500">No {activeTab} returns at the moment.</p>
+          ) : (
+            <ul className="space-y-3">
+              {returns.map((ret) => (
+                <li key={ret.id} className="border p-4 bg-white rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                  <div className="mb-2 w-full sm:w-auto">
+                     <p className="font-medium">  Customer: {ret.user?.name || ret.userName || "Unknown"}</p>
+                    <p>Package: {ret.packageName}</p>
+                   
+                    <p>Size: {ret.size}</p>
+                    <p>Category: {ret.category}</p>
+                    
+                    <p className="text-sm text-gray-500">Initiated At: {new Date(ret.scannedAt).toLocaleString()}</p>
+                  </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => openScanForm(ret)}
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                    >
+                    <button onClick={() => openScanForm(ret)} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
                       Approve
                     </button>
-                   <button
-          onClick={() => handleReject(ret.id)}
-        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-          >
-           Reject
-       </button>
-
+                    <button onClick={() => handleReject(ret.id)} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+                      Reject
+                    </button>
                   </div>
-                )}
-              </li>
-            ))}
+                </li>
+              ))}
+            </ul>
+          )
+        ) : historyLoading ? (
+          <p className="text-gray-500">Loading history...</p>
+        ) : history.filter((r) => r.status?.toLowerCase() === activeTab).length === 0 ? (
+          <p className="text-gray-500">No {activeTab} returns yet.</p>
+        ) : (
+          <ul className="space-y-3">
+            {history
+              .filter((r) => r.status?.toLowerCase() === activeTab)
+              .map((ret) => (
+                <li key={ret.id} className="border p-4 bg-white rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                  <div className="mb-2 w-full sm:w-auto">
+                    <p className="font-medium">  Customer: {ret.user?.name || ret.userName || "Unknown"}</p>
+                    <p>Package: {ret.packageName || "Unknown"}</p>
+                    
+                    <p>Size: {ret.size || "Unknown"}</p>
+                    
+                    <p>Category: {ret.category || "Unknown"}</p>
+                    <p>Barcode: {ret.barcode || "N/A"}</p>
+                    <p className="text-sm text-gray-500">
+                      {ret.status === "approved" ? "Approved At" : "Rejected At"}: {ret.actionAt ? new Date(ret.actionAt).toLocaleString() : "N/A"}
+                    </p>
+                  </div>
+                </li>
+              ))}
           </ul>
         )}
       </div>
 
-      {/* Modal for OTP verification */}
+      {/* OTP Modal */}
       {showScan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
-            <h2 className="text-lg font-semibold mb-4">
-              Enter OTP for Approval
-            </h2>
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-semibold mb-4">Enter OTP for Approval</h2>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter OTP"
-              className="border px-3 py-2 w-full mb-4"
+              className="border px-3 py-2 w-full mb-4 rounded"
             />
-
-            <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded"
-                onClick={() => setShowScan(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded"
-                onClick={handleFinalApprove}
-                disabled={!otp}
-              >
+            <div className="flex justify-end gap-2 flex-wrap">
+              <button className="px-4 py-2 bg-gray-300 rounded" onClick={() => setShowScan(false)}>Cancel</button>
+              <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={handleFinalApprove} disabled={!otp}>
                 Verify & Approve
               </button>
             </div>
@@ -324,11 +300,11 @@ function Card({ title, desc, onClick }) {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className={`cursor-pointer bg-white shadow p-6 rounded-lg hover:ring-2 ring-green-300 text-center`}
       onClick={onClick}
+      className="cursor-pointer w-full backdrop-blur-lg bg-white/80 border border-gray-200 rounded-xl p-6 shadow-xl hover:ring-2 ring-green-600 text-center flex flex-col justify-center h-full"
     >
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-gray-500">{desc}</p>
+      <h3 className="text-lg font-semibold mb-2 text-green-800">{title}</h3>
+      <p className="text-gray-700">{desc}</p>
     </motion.div>
   );
 }
