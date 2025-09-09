@@ -25,7 +25,7 @@ export default function RetailerNavbar() {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-6 text-gray-700 font-medium">
           <Link to="/" className={`hover:text-blue-600 ${location.pathname === "/" ? "text-blue-600 font-semibold" : ""}`}>Home</Link>
-
+           <Link to="/retailer/dashboard" className="block px-4 py-2 hover:bg-gray-100">Dashboard</Link>
           {/* Bell Icon */}
           <button className="hover:text-blue-600 cursor-pointer"><Bell /></button>
 
@@ -36,9 +36,9 @@ export default function RetailerNavbar() {
             </button>
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md text-sm z-10">
-                <Link to="/retailer/dashboard" className="block px-4 py-2 hover:bg-gray-100">Dashboard</Link>
-                <Link to="/retailer/inventory" className="block px-4 py-2 hover:bg-gray-100">Inventory</Link>
-                <Link to="/retailer/orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link>
+                {/* <Link to="/retailer/dashboard" className="block px-4 py-2 hover:bg-gray-100">Dashboard</Link> */}
+                {/* <Link to="/retailer/inventory" className="block px-4 py-2 hover:bg-gray-100">Inventory</Link>
+                <Link to="/retailer/orders" className="block px-4 py-2 hover:bg-gray-100">Orders</Link> */}
                 <button onClick={handleLogout} className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
                   <LogOut size={16} /> Logout
                 </button>
