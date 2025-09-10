@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import UserNavbar from './components/Navbar/UserNavbar';
-import RetailerNavbar from './components/Navbar/RetailerNavbar';
-import PublicNavbar from './components/Navbar/PublicNavbar';
+// import UserNavbar from './components/Navbar/UserNavbar';
+// import RetailerNavbar from './components/Navbar/RetailerNavbar';
+// import PublicNavbar from './components/Navbar/PublicNavbar';
 import Footer from './components/Footer';
 import Leaderboard from "./components/Leaderboard";
 import ReturnForm from "./components/ReturnForm";
 import NotificationProvider from "./context/NotificationContext";
+import { AuthProvider } from "./context/AuthContext";
+import NavbarSwitcher from "./components/NavbarSwitcher";
 
 // Pages
 import Home from './pages/Home';
@@ -49,13 +51,12 @@ const isAuthenticated = token && token !== "undefined" && token !== "";
 
   return (
     <NotificationProvider> 
+       <AuthProvider>
     <Router>
       <div className="flex flex-col min-h-screen">
 
         {/* Navbar Switch */}
-        {isAuthenticated && role === "user" && <UserNavbar />}
-        {isAuthenticated && role === "retailer" && <RetailerNavbar />}
-          {!isAuthenticated && <PublicNavbar />}
+        <NavbarSwitcher />
 
 
         <main className="flex-grow mt-14"> {/* Added margin for fixed navbar space */}
@@ -112,6 +113,7 @@ const isAuthenticated = token && token !== "undefined" && token !== "";
         <Footer />
       </div>
     </Router>
+    </AuthProvider>
     </NotificationProvider> 
   );
 }

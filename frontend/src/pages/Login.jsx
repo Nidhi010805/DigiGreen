@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import API from "../services/api";  // ✅ yeh import karo
+import API from "../services/api";  
+import { AuthContext } from "../context/AuthContext"; 
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: authLogin } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -17,7 +19,7 @@ export default function Login() {
 
     try {
       const res = await API.post("/api/auth/login", { email, password });
-      console.log("Calling:", process.env.REACT_APP_API_URL);
+      // console.log("Calling:", process.env.REACT_APP_API_URL);
 
 
       if (res.status === 200) {
@@ -26,6 +28,8 @@ export default function Login() {
         localStorage.setItem("role", data.role);
         localStorage.setItem("name", data.user.name);
         localStorage.setItem("userId", data.user.id);
+
+          authLogin(data.role, data.token);
 
         // ✅ Navigate based on role
         if (data.role?.toLowerCase() === "retailer") {
@@ -51,7 +55,7 @@ export default function Login() {
         className="w-full max-w-md p-8 bg-gray-50 dark:bg-white shadow-md rounded-lg"
       >
         <h2 className="text-2xl font-bold mb-6 text-green-700 dark:text-green-600 text-center">
-          Login to RePack
+          Login to Ecoloop
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

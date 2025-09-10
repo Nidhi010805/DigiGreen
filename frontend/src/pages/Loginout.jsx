@@ -1,24 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Logout() {
   const navigate = useNavigate();
+  const { logout: authLogout } = useContext(AuthContext);
 
   useEffect(() => {
     const logoutUser = async () => {
       try {
-        await API.post("/api/auth/logout");  
+        const token = localStorage.getItem("token");
+        if (token) {
+          await API.post("/api/auth/logout", {}, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
       } catch (error) {
-        console.error("Logout Error:", error?.response?.data || error.message);
+        console.error(error?.response?.data || error.message);
       } finally {
-        localStorage.clear();
-        navigate("/");  
+        authLogout(); 
+
+        // ✅ Navigate after a small delay to allow Navbar to re-render
+        setTimeout(() => navigate("/", { replace: true }), 50);
       }
     };
 
     logoutUser();
-  }, [navigate]);
+  }, [authLogout, navigate]);
 
   return (
     <div className="h-screen flex justify-center items-center">

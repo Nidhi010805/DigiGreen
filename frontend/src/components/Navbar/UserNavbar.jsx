@@ -3,8 +3,10 @@ import {  LogOut, Menu, X } from "lucide-react";
 import CartIcon from "../CartIcon";
 import LikesIcon from "../LikesIcon";
 import NotificationBell from "../NotificationBell";
-import { useState } from "react";
+import { useState,useContext  } from "react";
 import API from "../../services/api";
+import { AuthContext } from "../../context/AuthContext";
+
 
 
 export default function UserNavbar() {
@@ -13,6 +15,7 @@ export default function UserNavbar() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout: authLogout } = useContext(AuthContext);
   
 
   const handleSearch = (e) => {
@@ -42,7 +45,7 @@ const handleLogout = async () => {
     alert("Logout failed");
     console.error("Logout Error:", error?.response?.data || error.message);
   } finally {
-    localStorage.clear();
+   authLogout();
     navigate("/");
   }
 };

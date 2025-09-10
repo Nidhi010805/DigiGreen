@@ -1,15 +1,20 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Bell, User, LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState,useContext  } from "react";
+import { AuthContext } from "../../context/AuthContext";
+
+
+
 
 export default function RetailerNavbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout: authLogout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.clear();
+   authLogout();
     navigate("/");
   };
 
