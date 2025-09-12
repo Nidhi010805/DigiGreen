@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [role, setRole] = useState(null);
+  const [, setRole] = useState(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem("role");
@@ -29,29 +29,36 @@ export default function Home() {
         </div>
 
         {/* White Overlay */}
-        <div className="absolute inset-0 bg-white bg-opacity-50 z-0" />
+  <div className="absolute inset-0 bg-white bg-opacity-50 z-0" />
 
-        {/* Foreground Content */}
-        <div className="relative z-10 text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-extrabold leading-snug mb-2">
-            <span className="text-[#007A5E]">SMARTER, </span>
-            <span className="text-green-600">GREENER RETAIL</span>
-          </h2>
-          <h2 className="text-3xl md:text-4xl font-extrabold leading-snug mb-4">
-            <span className="text-[#007A5E]">- POWERED BY AI</span>
-          </h2>
-          <p className="text-gray-800 max-w-xl mx-auto mb-6 text-sm md:text-base">
-            Forecast demand. Optimize routes. Reduce packaging waste. Track CO₂. Reward eco-friendly customers.
-          </p>
-          <button
-            onClick={() => navigate("/signup")}
-            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1"
-          >
-            Join Now
-          </button>
-        </div>
-      </div>
-
+  {/* Foreground Content */}
+  <div className="relative z-10 text-center max-w-3xl mx-auto">
+    <h2 className="text-3xl md:text-4xl font-extrabold leading-snug mb-2">
+      <span className="text-[#007A5E]">SMARTER, </span>
+      <span className="text-green-600">GREENER RETAIL</span>
+    </h2>
+    <h2 className="text-3xl md:text-4xl font-extrabold leading-snug mb-4">
+      <span className="text-[#007A5E]">- POWERED BY AI</span>
+    </h2>
+    <p className="text-gray-800 max-w-xl mx-auto mb-6 text-sm md:text-base">
+      Return packaging, earn rewards, and track eco-impact. Retailers approve returns, and users climb the leaderboard for sustainable actions.
+    </p>
+    <div className="flex flex-col md:flex-row justify-center gap-4">
+      <button
+        onClick={() => navigate("/return")}
+        className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+      >
+        Return Packaging
+      </button>
+      <button
+        onClick={() => navigate("/leaderboard")}
+        className="bg-white border border-green-600 text-green-600 font-semibold px-8 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1"
+      >
+        View Leaderboard
+      </button>
+    </div>
+  </div>
+</div>
       {/* Features Section */}
       <section className="bg-[#e6f7f2] py-16 px-4 flex flex-col items-center">
         <h3 className="text-2xl md:text-3xl font-bold text-[#007A5E] mb-12">

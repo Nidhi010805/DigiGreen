@@ -72,8 +72,8 @@ export default function RetailerNavbar() {
           </button>
 
           <Link to="/retailer/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Dashboard</Link>
-          <Link to="/retailer/inventory" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Inventory</Link>
-          <Link to="/retailer/orders" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Orders</Link>
+          {/* <Link to="/retailer/inventory" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Inventory</Link>
+          <Link to="/retailer/orders" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Orders</Link> */}
 
           {/* Logout */}
           <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="hover:text-blue-600 flex items-center gap-2 cursor-pointer">

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {  LogOut, Menu, X } from "lucide-react";
-import CartIcon from "../CartIcon";
-import LikesIcon from "../LikesIcon";
+// import CartIcon from "../CartIcon";
+// import LikesIcon from "../LikesIcon";
 import NotificationBell from "../NotificationBell";
 import { useState,useContext  } from "react";
 import API from "../../services/api";
@@ -12,20 +12,20 @@ import { AuthContext } from "../../context/AuthContext";
 export default function UserNavbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  // const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const { logout: authLogout } = useContext(AuthContext);
   
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
-      setSearchTerm("");
-      setMenuOpen(false);
-    }
-  };
+  // const handleSearch = (e) => {
+  //   e.preventDefault();
+  //   if (searchTerm.trim()) {
+  //     navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+  //     setSearchTerm("");
+  //     setMenuOpen(false);
+  //   }
+  // };
 
 
 
@@ -118,7 +118,7 @@ const handleLogout = async () => {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow px-6 py-4 flex flex-col space-y-3 text-gray-700 font-medium">
-          <form onSubmit={handleSearch}>
+          {/* <form onSubmit={handleSearch}>
             <input
               type="text"
               value={searchTerm}
@@ -126,13 +126,13 @@ const handleLogout = async () => {
               placeholder="Search..."
               className="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-400 mb-2"
             />
-          </form>
+          </form> */}
 
           <Link to="/" onClick={() => setMenuOpen(false)} className={`hover:text-blue-600 ${location.pathname === "/" ? "text-blue-600 font-semibold" : ""}`}>Home</Link>
-          <Link to="/products" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Products</Link>
+          {/* <Link to="/products" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Products</Link> */}
           <Link to="/leaderboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Leaderboard</Link>
-          <Link to="/cart" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 flex items-center gap-2"><CartIcon /> Cart</Link>
-          <Link to="/likes" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 flex items-center gap-2"><LikesIcon /> Likes</Link>
+          {/* <Link to="/cart" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 flex items-center gap-2"><CartIcon /> Cart</Link>
+          <Link to="/likes" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 flex items-center gap-2"><LikesIcon /> Likes</Link> */}
 
           {/* <Link to="/notifications" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 flex items-center gap-2 relative">
             Notifications
@@ -144,8 +144,8 @@ const handleLogout = async () => {
           </Link> */}
 
           <Link to="/user/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">Dashboard</Link>
-          <Link to="/my-returns" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">My Returns</Link>
-          <Link to="/my-rewards" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">My Rewards</Link>
+          {/* <Link to="/my-returns" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">My Returns</Link>
+          <Link to="/my-rewards" onClick={() => setMenuOpen(false)} className="hover:text-blue-600">My Rewards</Link> */}
           <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="hover:text-blue-600 flex items-center gap-2">
             <LogOut size={16} /> Logout
           </button>

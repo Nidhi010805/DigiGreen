@@ -27,7 +27,7 @@ import MyOrders from "./pages/MyOrders";
 import Likes from "./pages/Likes";
 import InitiateReturn from "./pages/InitiateReturn";
 import Rewards from "./pages/Rewards";
-
+import AdminPage from "./pages/AdminPage";
 import Inventory from './pages/Inventory';
 import BotpressChat from "./components/BotPressChat";
 
@@ -43,10 +43,10 @@ import Hero from './components/Hero';
 import ReturnRefund from './pages/ReturnRefund';
 
 function App() {
- const token = localStorage.getItem("token");
-const role = localStorage.getItem("role");
+//  const token = localStorage.getItem("token");
+// const role = localStorage.getItem("role");
 
-const isAuthenticated = token && token !== "undefined" && token !== "";
+// const isAuthenticated = token && token !== "undefined" && token !== "";
 
 
   return (
@@ -81,7 +81,7 @@ const isAuthenticated = token && token !== "undefined" && token !== "";
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/retailers" element={<RetailersPage />} />
              <Route path="/return-package" element={<ReturnForm />} />
-
+ <Route path="/admin/dashboard" element={<AdminPage />} />
 
             {/* Retailer Routes */}
             <Route path="/retailer/dashboard" element={<RetailerDashboard />} />

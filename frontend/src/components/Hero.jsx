@@ -45,22 +45,25 @@ const Hero = () => {
           transition={{ duration: 1 }}
           className="absolute top-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-500/30 rounded-full blur-3xl z-0" 
         />
-        <motion.h1 variants={fadeInUp} transition={{ duration: 0.8 }} className="relative text-4xl sm:text-5xl font-bold text-teal-600 leading-tight mb-4">
-          SMARTER,<span className="text-green-600">GREENER RETAIL</span><br className="hidden sm:block" /> - POWERED BY AI
-        </motion.h1>
-        <motion.p variants={fadeInUp} transition={{ duration: 0.8, delay: 0.3 }} className="relative text-gray-600 max-w-2xl mx-auto mb-6 text-sm sm:text-base">
-          Forecast demand. Optimize routes. Reduce packaging waste. Track CO₂. Reverse carbon footprint of ecommerce.
-        </motion.p>
-       <motion.button
-  variants={fadeInUp}
-  transition={{ duration: 0.8, delay: 0.6 }}
-  whileHover={{ scale: 1.1 }}
-  whileTap={{ scale: 0.95 }}
-  onClick={handleCTAClick}
-  className="relative bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-semibold text-sm sm:text-base shadow-lg"
+       <motion.h1 
+  variants={fadeInUp} 
+  transition={{ duration: 0.8 }} 
+  className="relative text-3xl sm:text-4xl font-bold text-teal-600 leading-tight mb-4"
 >
-  {role ? "Go to Dashboard" : "Join Now"}
-</motion.button>
+  EARN REWARDS, <span className="text-green-600">SAVE THE PLANET</span><br className="hidden sm:block" /> — SMART PACKAGING MADE SIMPLE
+</motion.h1>
+
+        <motion.p variants={fadeInUp} transition={{ duration: 0.8, delay: 0.3 }} className="relative text-gray-600 max-w-2xl mx-auto mb-6 text-sm sm:text-base">
+    Return packaging, earn rewards, and track eco-impact. Retailers approve returns, and users climb the leaderboard for sustainable actions.
+  </motion.p>
+       <motion.div className="flex flex-col sm:flex-row justify-center gap-4">
+          <motion.button variants={fadeInUp} transition={{ duration: 0.8, delay: 0.6 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleCTAClick} className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold shadow-lg">
+            {role ? "Go to Dashboard" : "Join Now"}
+          </motion.button>
+          <motion.button variants={fadeInUp} transition={{ duration: 0.8, delay: 0.8 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/leaderboard")} className="bg-white border border-green-600 text-green-600 px-8 py-3 rounded-full font-semibold shadow-lg">
+            View Leaderboard
+          </motion.button>
+        </motion.div>
 
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }} 
@@ -191,33 +194,36 @@ const Hero = () => {
   variants={fadeInUp}
   className="relative py-20 px-6 z-10 bg-gradient-to-b from-white via-green-50 to-green-100 text-center"
 >
-  {/* Decorative Circles */}
-  <div className="absolute top-0 left-0 w-40 h-40 md:w-72 md:h-72 bg-green-400/20 rounded-full blur-3xl z-0" />
-  <div className="absolute bottom-0 right-0 w-40 h-40 md:w-72 md:h-72 bg-teal-400/20 rounded-full blur-3xl z-0" />
+{/* Decorative Circles */}
+<div className="absolute top-0 left-0 w-36 h-36 md:w-64 md:h-64 bg-green-500/20 rounded-full blur-3xl z-0" />
+<div className="absolute top-10 right-10 w-28 h-28 md:w-48 md:h-48 bg-teal-500/20 rounded-full blur-2xl z-0" />
+<div className="absolute bottom-0 left-10 w-32 h-32 md:w-56 md:h-56 bg-green-600/15 rounded-full blur-3xl z-0" />
+<div className="absolute bottom-10 right-20 w-28 h-28 md:w-48 md:h-48 bg-teal-600/15 rounded-full blur-2xl z-0" />
 
-  <motion.div className="relative z-10 max-w-3xl mx-auto">
-    <h2 className="text-3xl md:text-4xl font-bold text-green-700 mb-4">
-      One Nation, One Packaging — <span className="text-teal-600">Zero Waste</span>
-    </h2>
-    <p className="text-gray-700 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
-      Join India’s first unified, reward-based circular packaging ecosystem.  
-      Replace <span className="font-semibold">use-and-throw</span> with  
-      <span className="font-semibold"> use-return-reward</span> and be part of the green revolution.
-    </p>
+<motion.div className="relative z-10 max-w-3xl mx-auto text-center">
+  <h2 className="text-3xl md:text-4xl font-bold text-teal-700 mb-4">
+    <span className="text-green-600">Eco Rewards</span> for Every Return — <span className="text-teal-600">Zero Waste</span>
+  </h2>
+  <p className="text-gray-700 max-w-2xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+    Be part of India’s <span className="font-semibold text-green-600">first circular packaging ecosystem</span>!  
+    Return packages, earn <span className="font-semibold text-teal-600">GreenCoins</span>, and climb the <span className="font-semibold text-green-700">leaderboard</span> for your sustainable actions.  
+    Together, we replace <span className="font-semibold text-green-600">use-and-throw</span> with <span className="font-semibold text-teal-600">use-return-reward</span> and make every delivery count.
+  </p>
 
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={handleCTAClick}
-      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold text-base shadow-lg transition-all"
-    >
-      {role === "user"
-        ? "Start Returning & Earning"
-        : role === "retailer"
-        ? "Join as Retail Partner"
-        : "Be a Part of EcooLoop"}
-    </motion.button>
-  </motion.div>
+  <motion.button
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={handleCTAClick}
+    className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-full font-semibold text-base shadow-lg transition-all"
+  >
+    {role === "user"
+      ? "Start Returning & Earning"
+      : role === "retailer"
+      ? "Join as Retail Partner"
+      : "Join the Eco Loop"}
+  </motion.button>
+</motion.div>
+
 </motion.section>
 
     </div>
